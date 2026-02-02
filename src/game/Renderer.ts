@@ -313,20 +313,38 @@ export class Renderer {
     const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     this.ctx.fillText(timeStr, CANVAS_WIDTH / 2, 5);
 
-    // Player stats (bottom corners)
-    this.ctx.font = '14px Arial';
+    // Player stats (bottom of screen)
+    this.ctx.font = '12px Arial';
     this.ctx.textAlign = 'left';
+    
+    const statsY = CANVAS_HEIGHT - 18;
+    const playerWidth = CANVAS_WIDTH / players.length;
     
     for (let i = 0; i < players.length; i++) {
       const player = players[i];
-      const x = i % 2 === 0 ? 10 : CANVAS_WIDTH - 100;
-      const y = i < 2 ? CANVAS_HEIGHT - 40 : CANVAS_HEIGHT - 20;
+      const x = i * playerWidth + 5;
       
+      // Player color indicator
       this.ctx.fillStyle = player.color;
-      this.ctx.fillRect(x, y, 10, 10);
+      this.ctx.fillRect(x, statsY, 8, 8);
       
+      // Alive/dead indicator
+      if (!player.isAlive()) {
+        this.ctx.strokeStyle = '#ff0000';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, statsY);
+        this.ctx.lineTo(x + 8, statsY + 8);
+        this.ctx.moveTo(x + 8, statsY);
+        this.ctx.lineTo(x, statsY + 8);
+        this.ctx.stroke();
+      }
+      
+      // Stats text: P1 B:2 F:3 W:1
       this.ctx.fillStyle = '#ffffff';
-      this.ctx.fillText(`P${i + 1}: ${player.stats.wins}W`, x + 15, y + 9);
+      const stats = player.stats;
+      const text = `P${i + 1} B:${stats.bombs} F:${stats.fire} W:${stats.wins}`;
+      this.ctx.fillText(text, x + 12, statsY + 7);
     }
   }
 

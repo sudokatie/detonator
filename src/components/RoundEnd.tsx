@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PLAYER_COLORS } from '../game/constants';
 
 interface RoundEndProps {
@@ -8,8 +9,27 @@ interface RoundEndProps {
 }
 
 export default function RoundEnd({ winnerId, onNextRound }: RoundEndProps) {
+  const [countdown, setCountdown] = useState(3);
   const isDraw = winnerId === null;
   const winnerColor = winnerId !== null ? PLAYER_COLORS[winnerId] : '#888888';
+
+  useEffect(() => {
+    if (countdown <= 0) {
+      onNextRound();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown(c => c - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown, onNextRound]);
+
+  // Reset countdown when component mounts (new round end)
+  useEffect(() => {
+    setCountdown(3);
+  }, [winnerId]);
 
   return (
     <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
@@ -29,12 +49,10 @@ export default function RoundEnd({ winnerId, onNextRound }: RoundEndProps) {
           </div>
         )}
 
-        <button
-          onClick={onNextRound}
-          className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white text-xl font-bold rounded transition-colors"
-        >
-          Next Round
-        </button>
+        <div className="text-6xl font-bold text-orange-500 mb-4">
+          {countdown}
+        </div>
+        <p className="text-gray-400">Next round starting...</p>
       </div>
     </div>
   );
