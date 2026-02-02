@@ -6,4 +6,5 @@ module.exports = {
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
   collectCoverageFrom: ['src/game/**/*.ts', '!src/game/Renderer.ts'],
+  testTimeout: 5000,
 }

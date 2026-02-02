@@ -1,14 +1,15 @@
-import { GameState, Position, Direction, PowerUpType, PowerUp, PlayerState } from './types';
+import { GameState, Position, Direction, PowerUpType, PlayerState } from './types';
 import { Arena } from './Arena';
 import { Player } from './Player';
 import { BombManager } from './Bomb';
-import { SPAWN_POINTS, PLAYER_COLORS, ROUNDS_TO_WIN, ROUND_TIME, POWERUP_LIFETIME } from './constants';
+import { PowerUpManager } from './PowerUp';
+import { SPAWN_POINTS, PLAYER_COLORS, ROUNDS_TO_WIN, ROUND_TIME } from './constants';
 
 export class Game {
   private _arena: Arena;
   private _players: Player[];
   private _bombManager: BombManager;
-  private _powerUps: Map<string, PowerUp>;
+  private _powerUpManager: PowerUpManager;
   private _state: GameState;
   private _roundTimer: number;
   private _matchWinner: number | null;
@@ -17,7 +18,7 @@ export class Game {
   constructor(playerCount: number = 2) {
     this._arena = new Arena();
     this._bombManager = new BombManager();
-    this._powerUps = new Map();
+    this._powerUpManager = new PowerUpManager();
     this._players = [];
     this._state = GameState.Menu;
     this._roundTimer = ROUND_TIME;
@@ -46,8 +47,16 @@ export class Game {
     return this._bombManager;
   }
 
-  get powerUps(): PowerUp[] {
-    return Array.from(this._powerUps.values());
+  get powerUpManager(): PowerUpManager {
+    return this._powerUpManager;
+  }
+
+  get powerUps(): { position: Position; type: PowerUpType; lifetime: number }[] {
+    return this._powerUpManager.powerUps.map(p => ({
+      position: p.position,
+      type: p.type,
+      lifetime: p.timer,
+    }));
   }
 
   get roundTimer(): number {
@@ -94,28 +103,21 @@ export class Game {
 
     // Handle new power-ups from destroyed blocks
     for (const pu of bombResult.powerUps) {
-      this.addPowerUp(pu.position, pu.type);
+      this._powerUpManager.spawn(pu.position, pu.type);
     }
 
-    // Update power-ups: lifetime and explosion destruction
-    const expiredKeys: string[] = [];
-    for (const [key, powerUp] of this._powerUps) {
-      // Check if destroyed by explosion
+    // Check for power-ups destroyed by explosions
+    for (const powerUp of this._powerUpManager.powerUps) {
       if (this._bombManager.isExplosion(powerUp.position.x, powerUp.position.y)) {
-        expiredKeys.push(key);
-        this._arena.setTile(powerUp.position.x, powerUp.position.y, 0); // Floor
-        continue;
-      }
-      
-      // Decrease lifetime
-      powerUp.lifetime -= dt;
-      if (powerUp.lifetime <= 0) {
-        expiredKeys.push(key);
+        this._powerUpManager.removeAt(powerUp.position);
         this._arena.setTile(powerUp.position.x, powerUp.position.y, 0); // Floor
       }
     }
-    for (const key of expiredKeys) {
-      this._powerUps.delete(key);
+
+    // Update power-ups (lifetime countdown)
+    const expired = this._powerUpManager.update(dt);
+    for (const pos of expired) {
+      this._arena.setTile(pos.x, pos.y, 0); // Floor
     }
 
     // Check player deaths from explosions
@@ -133,12 +135,10 @@ export class Game {
       if (!player.isAlive()) continue;
 
       const gridPos = player.getGridPosition();
-      const key = this.posKey(gridPos);
-      const powerUp = this._powerUps.get(key);
+      const type = this._powerUpManager.collect(gridPos);
 
-      if (powerUp) {
-        player.collectPowerUp(powerUp.type);
-        this._powerUps.delete(key);
+      if (type) {
+        player.collectPowerUp(type);
         this._arena.setTile(gridPos.x, gridPos.y, 0); // Floor
       }
     }
@@ -178,15 +178,6 @@ export class Game {
     return true;
   }
 
-  private addPowerUp(position: Position, type: PowerUpType): void {
-    const key = this.posKey(position);
-    this._powerUps.set(key, { position, type, lifetime: POWERUP_LIFETIME });
-  }
-
-  private posKey(pos: Position): string {
-    return `${pos.x},${pos.y}`;
-  }
-
   private handleTimeUp(): void {
     // When time runs out, all remaining players die (draw)
     for (const player of this._players) {
@@ -223,7 +214,7 @@ export class Game {
   private resetRound(): void {
     this._arena.reset();
     this._bombManager.clear();
-    this._powerUps.clear();
+    this._powerUpManager.clear();
     this._roundTimer = ROUND_TIME;
     this._roundWinner = null;
 

@@ -79,8 +79,8 @@ export interface BoundingBox {
   height: number;
 }
 
-// Power-up instance
-export interface PowerUp {
+// Power-up data (for rendering)
+export interface PowerUpData {
   position: Position;
   type: PowerUpType;
   lifetime: number;

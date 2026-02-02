@@ -1,4 +1,4 @@
-import { TileType, Direction, PowerUpType, PowerUp } from './types';
+import { TileType, Direction, PowerUpType, PowerUpData } from './types';
 import { Arena } from './Arena';
 import { Player } from './Player';
 import { Bomb, Explosion, BombManager } from './Bomb';
@@ -253,13 +253,13 @@ export class Renderer {
     }
   }
 
-  drawPowerUps(powerUps: PowerUp[]): void {
+  drawPowerUps(powerUps: PowerUpData[]): void {
     for (const pu of powerUps) {
       this.drawPowerUp(pu);
     }
   }
 
-  private drawPowerUp(powerUp: PowerUp): void {
+  private drawPowerUp(powerUp: PowerUpData): void {
     const px = powerUp.position.x * TILE_SIZE;
     const py = powerUp.position.y * TILE_SIZE;
     const bounce = Math.sin(this.animFrame * 0.1) * 2;
