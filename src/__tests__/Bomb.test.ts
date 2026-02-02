@@ -174,6 +174,62 @@ describe('Explosion', () => {
       expect(explosion.isFinished()).toBe(true);
     });
   });
+
+  describe('animation phases', () => {
+    it('should start in expand phase', () => {
+      expect(explosion.phase).toBe('expand');
+    });
+
+    it('should transition to full phase', () => {
+      explosion.update(EXPLOSION_DURATION * 0.4); // 40% through
+      expect(explosion.phase).toBe('full');
+    });
+
+    it('should transition to fade phase', () => {
+      explosion.update(EXPLOSION_DURATION * 0.8); // 80% through
+      expect(explosion.phase).toBe('fade');
+    });
+
+    it('should have 0 progress initially', () => {
+      expect(explosion.progress).toBeCloseTo(0, 1);
+    });
+
+    it('should have 1 progress at end', () => {
+      explosion.update(EXPLOSION_DURATION);
+      expect(explosion.progress).toBeCloseTo(1, 1);
+    });
+
+    it('should scale from 0 to 1 during expand phase', () => {
+      expect(explosion.scale).toBeCloseTo(0, 1);
+      explosion.update(EXPLOSION_DURATION * 0.16);
+      expect(explosion.scale).toBeCloseTo(0.5, 1);
+      explosion.update(EXPLOSION_DURATION * 0.16);
+      expect(explosion.scale).toBeCloseTo(1, 1);
+    });
+
+    it('should maintain scale of 1 during full phase', () => {
+      explosion.update(EXPLOSION_DURATION * 0.5);
+      expect(explosion.scale).toBeCloseTo(1, 1);
+    });
+
+    it('should scale from 1 to 0 during fade phase', () => {
+      explosion.update(EXPLOSION_DURATION * 0.7);
+      expect(explosion.scale).toBeLessThan(1);
+      explosion.update(EXPLOSION_DURATION * 0.29);
+      expect(explosion.scale).toBeLessThan(0.2);
+    });
+
+    it('should have full opacity in expand and full phases', () => {
+      expect(explosion.opacity).toBe(1);
+      explosion.update(EXPLOSION_DURATION * 0.5);
+      expect(explosion.opacity).toBe(1);
+    });
+
+    it('should fade opacity in fade phase', () => {
+      explosion.update(EXPLOSION_DURATION * 0.8);
+      expect(explosion.opacity).toBeLessThan(1);
+    });
+  });
 });
 
 describe('BombManager', () => {

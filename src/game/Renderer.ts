@@ -263,16 +263,25 @@ export class Renderer {
   private drawExplosion(explosion: Explosion): void {
     const tiles = explosion.tiles;
     const center = explosion.center;
+    const scale = explosion.scale;
+    const opacity = explosion.opacity;
+
+    this.ctx.save();
+    this.ctx.globalAlpha = opacity;
 
     for (const tile of tiles) {
       const px = tile.x * TILE_SIZE;
       const py = tile.y * TILE_SIZE;
       const isCenter = tile.x === center.x && tile.y === center.y;
 
+      // Calculate scaled size based on explosion phase
+      const size = TILE_SIZE * scale;
+      const offset = (TILE_SIZE - size) / 2;
+
       // Gradient from center
       const gradient = this.ctx.createRadialGradient(
         px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0,
-        px + TILE_SIZE / 2, py + TILE_SIZE / 2, TILE_SIZE / 2
+        px + TILE_SIZE / 2, py + TILE_SIZE / 2, size / 2
       );
       
       if (isCenter) {
@@ -285,8 +294,10 @@ export class Renderer {
       }
 
       this.ctx.fillStyle = gradient;
-      this.ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+      this.ctx.fillRect(px + offset, py + offset, size, size);
     }
+
+    this.ctx.restore();
   }
 
   drawPowerUps(powerUps: PowerUpData[]): void {

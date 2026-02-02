@@ -42,6 +42,10 @@ export default function Home() {
     }
   }, []);
 
+  const handleRoundEnd = useCallback((winnerId: number | null) => {
+    setRoundWinner(winnerId);
+  }, []);
+
   const handleMatchEnd = useCallback((winnerId: number | null) => {
     setMatchWinner(winnerId);
   }, []);
@@ -84,6 +88,7 @@ export default function Home() {
           playerCount={playerCount}
           roundsToWin={roundsToWin}
           onStateChange={handleStateChange}
+          onRoundEnd={handleRoundEnd}
           onMatchEnd={handleMatchEnd}
         />
         

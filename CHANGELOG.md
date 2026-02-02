@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.2] - 2026-02-01
+
+### Fixed
+- Round winner now correctly displayed (was always showing "DRAW")
+- Added onRoundEnd callback to communicate winner from Game to UI
+
+### Added
+- Explosion 3-phase animation (expand, full, fade) per spec
+- Explosion class now has progress, phase, scale, opacity getters
+- 10 new explosion animation tests
+
+### Changed
+- Renderer now scales and fades explosions based on phase
+- Total tests: 201
+
 ## [0.1.1] - 2026-02-01
 
 ### Added

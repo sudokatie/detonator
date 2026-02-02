@@ -77,6 +77,45 @@ export class Explosion {
     return this._timer;
   }
 
+  // Returns 0-1 progress through explosion (0 = just started, 1 = about to end)
+  get progress(): number {
+    return 1 - (this._timer / EXPLOSION_DURATION);
+  }
+
+  // Returns current phase: 'expand' (0-33%), 'full' (33-66%), 'fade' (66-100%)
+  get phase(): 'expand' | 'full' | 'fade' {
+    const progress = this.progress;
+    if (progress < 0.33) return 'expand';
+    if (progress < 0.66) return 'full';
+    return 'fade';
+  }
+
+  // Returns scale factor for current phase (0-1 for expand, 1 for full, 1-0 for fade)
+  get scale(): number {
+    const progress = this.progress;
+    if (progress < 0.33) {
+      // Expand: 0 -> 1 over first third
+      return progress / 0.33;
+    } else if (progress < 0.66) {
+      // Full: stay at 1
+      return 1;
+    } else {
+      // Fade: 1 -> 0 over last third
+      return 1 - ((progress - 0.66) / 0.34);
+    }
+  }
+
+  // Returns opacity for current phase
+  get opacity(): number {
+    const progress = this.progress;
+    if (progress < 0.66) {
+      return 1;
+    } else {
+      // Fade out in last third
+      return 1 - ((progress - 0.66) / 0.34);
+    }
+  }
+
   private calculateTiles(center: Position, range: number, arena: Arena): Position[] {
     const tiles: Position[] = [{ ...center }];
     const directions = [
