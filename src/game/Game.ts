@@ -227,11 +227,12 @@ export class Game {
     this._matchWinner = null;
     this._state = GameState.Menu;
     
-    for (const player of this._players) {
-      // Reset wins
-      while (player.stats.wins > 0) {
-        player.reset(SPAWN_POINTS[player.id]);
-      }
+    // Recreate players to fully reset (including wins)
+    const playerCount = this._players.length;
+    this._players = [];
+    for (let i = 0; i < playerCount; i++) {
+      const spawn = SPAWN_POINTS[i];
+      this._players.push(new Player(i, spawn, PLAYER_COLORS[i]));
     }
     
     this.resetRound();

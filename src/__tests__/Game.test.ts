@@ -2,8 +2,7 @@ import { Game } from '../game/Game';
 import { GameState, Direction, TileType, PowerUpType } from '../game/types';
 import { ROUNDS_TO_WIN, ROUND_TIME, BOMB_TIMER, EXPLOSION_DURATION } from '../game/constants';
 
-// Note: Tests pass individually but hang when run together - Jest isolation issue
-describe.skip('Game', () => {
+describe('Game', () => {
   let game: Game;
 
   beforeEach(() => {
