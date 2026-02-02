@@ -1,14 +1,15 @@
 'use client';
 
-import { PLAYER_COLORS, ROUNDS_TO_WIN } from '../game/constants';
+import { PLAYER_COLORS } from '../game/constants';
 
 interface GameOverProps {
   winnerId: number | null;
+  roundsToWin: number;
   onPlayAgain: () => void;
   onMainMenu: () => void;
 }
 
-export default function GameOver({ winnerId, onPlayAgain, onMainMenu }: GameOverProps) {
+export default function GameOver({ winnerId, roundsToWin, onPlayAgain, onMainMenu }: GameOverProps) {
   const winnerColor = winnerId !== null ? PLAYER_COLORS[winnerId] : '#888888';
 
   return (
@@ -25,7 +26,7 @@ export default function GameOver({ winnerId, onPlayAgain, onMainMenu }: GameOver
               Player {winnerId + 1}
             </div>
             <div className="text-2xl text-white">
-              Wins the Match! ({ROUNDS_TO_WIN} rounds)
+              Wins the Match! ({roundsToWin} rounds)
             </div>
           </div>
         )}

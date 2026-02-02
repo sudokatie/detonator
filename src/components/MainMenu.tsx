@@ -3,11 +3,12 @@
 import { useState } from 'react';
 
 interface MainMenuProps {
-  onStart: (playerCount: number) => void;
+  onStart: (playerCount: number, roundsToWin: number) => void;
 }
 
 export default function MainMenu({ onStart }: MainMenuProps) {
   const [playerCount, setPlayerCount] = useState(2);
+  const [roundsToWin, setRoundsToWin] = useState(3);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
@@ -28,6 +29,25 @@ export default function MainMenu({ onStart }: MainMenuProps) {
                 }`}
               >
                 {count}P
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-lg mb-2">Rounds to Win</label>
+          <div className="flex gap-2">
+            {[1, 3, 5].map((count) => (
+              <button
+                key={count}
+                onClick={() => setRoundsToWin(count)}
+                className={`px-6 py-3 rounded font-bold transition-colors ${
+                  roundsToWin === count
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-700 hover:bg-gray-600'
+                }`}
+              >
+                {count}
               </button>
             ))}
           </div>
@@ -64,7 +84,7 @@ export default function MainMenu({ onStart }: MainMenuProps) {
         </div>
 
         <button
-          onClick={() => onStart(playerCount)}
+          onClick={() => onStart(playerCount, roundsToWin)}
           className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white text-xl font-bold rounded transition-colors"
         >
           START GAME

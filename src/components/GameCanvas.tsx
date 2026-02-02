@@ -9,11 +9,12 @@ import { DISPLAY_WIDTH, DISPLAY_HEIGHT, CANVAS_SCALE } from '../game/constants';
 
 interface GameCanvasProps {
   playerCount: number;
+  roundsToWin?: number;
   onStateChange?: (state: GameState) => void;
   onMatchEnd?: (winnerId: number | null) => void;
 }
 
-export default function GameCanvas({ playerCount, onStateChange, onMatchEnd }: GameCanvasProps) {
+export default function GameCanvas({ playerCount, roundsToWin = 3, onStateChange, onMatchEnd }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<Game | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -69,14 +70,14 @@ export default function GameCanvas({ playerCount, onStateChange, onMatchEnd }: G
 
     // Continue loop
     animationRef.current = requestAnimationFrame(gameLoop);
-  }, [playerCount, onStateChange, onMatchEnd]);
+  }, [playerCount, roundsToWin, onStateChange, onMatchEnd]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     // Initialize game components
-    const game = new Game(playerCount);
+    const game = new Game(playerCount, roundsToWin);
     const renderer = new Renderer(canvas);
     const input = new InputHandler();
 
@@ -108,7 +109,7 @@ export default function GameCanvas({ playerCount, onStateChange, onMatchEnd }: G
       }
       input.detach();
     };
-  }, [playerCount, gameLoop]);
+  }, [playerCount, roundsToWin, gameLoop]);
 
   // Handle pause/resume with Escape key
   useEffect(() => {

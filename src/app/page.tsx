@@ -13,12 +13,14 @@ type AppState = 'menu' | 'playing' | 'paused' | 'roundEnd' | 'gameOver';
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('menu');
   const [playerCount, setPlayerCount] = useState(2);
+  const [roundsToWin, setRoundsToWin] = useState(3);
   const [roundWinner, setRoundWinner] = useState<number | null>(null);
   const [matchWinner, setMatchWinner] = useState<number | null>(null);
   const [gameKey, setGameKey] = useState(0);
 
-  const handleStart = useCallback((count: number) => {
+  const handleStart = useCallback((count: number, rounds: number) => {
     setPlayerCount(count);
+    setRoundsToWin(rounds);
     setAppState('playing');
     setGameKey((k) => k + 1);
   }, []);
@@ -80,6 +82,7 @@ export default function Home() {
         <GameCanvas
           key={gameKey}
           playerCount={playerCount}
+          roundsToWin={roundsToWin}
           onStateChange={handleStateChange}
           onMatchEnd={handleMatchEnd}
         />
@@ -95,6 +98,7 @@ export default function Home() {
         {appState === 'gameOver' && (
           <GameOver
             winnerId={matchWinner}
+            roundsToWin={roundsToWin}
             onPlayAgain={handlePlayAgain}
             onMainMenu={handleMainMenu}
           />

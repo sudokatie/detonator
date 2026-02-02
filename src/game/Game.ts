@@ -14,8 +14,9 @@ export class Game {
   private _roundTimer: number;
   private _matchWinner: number | null;
   private _roundWinner: number | null;
+  private _roundsToWin: number;
 
-  constructor(playerCount: number = 2) {
+  constructor(playerCount: number = 2, roundsToWin: number = ROUNDS_TO_WIN) {
     this._arena = new Arena();
     this._bombManager = new BombManager();
     this._powerUpManager = new PowerUpManager();
@@ -24,6 +25,7 @@ export class Game {
     this._roundTimer = ROUND_TIME;
     this._matchWinner = null;
     this._roundWinner = null;
+    this._roundsToWin = roundsToWin;
 
     for (let i = 0; i < Math.min(playerCount, 4); i++) {
       const spawn = SPAWN_POINTS[i];
@@ -69,6 +71,10 @@ export class Game {
 
   get roundWinner(): number | null {
     return this._roundWinner;
+  }
+
+  get roundsToWin(): number {
+    return this._roundsToWin;
   }
 
   start(): void {
@@ -195,7 +201,7 @@ export class Game {
       this._players[winnerId].addWin();
 
       // Check for match winner
-      if (this._players[winnerId].stats.wins >= ROUNDS_TO_WIN) {
+      if (this._players[winnerId].stats.wins >= this._roundsToWin) {
         this._matchWinner = winnerId;
         this._state = GameState.GameEnd;
         return;
