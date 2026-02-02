@@ -282,4 +282,99 @@ describe('Player', () => {
       expect(player.stats.bombs).toBe(DEFAULT_BOMBS);
     });
   });
+
+  describe('walk animation', () => {
+    it('should start with walkFrame 0', () => {
+      expect(player.walkFrame).toBe(0);
+    });
+
+    it('should not be moving initially', () => {
+      expect(player.isMoving).toBe(false);
+    });
+
+    it('should set isMoving when player moves', () => {
+      player = new Player(0, { x: 1, y: 2 }, '#00ff00');
+      player.move(Direction.Up, arena, 0.1);
+      expect(player.isMoving).toBe(true);
+    });
+
+    it('should cycle through walk frames when moving', () => {
+      player = new Player(0, { x: 1, y: 2 }, '#00ff00');
+      player.move(Direction.Up, arena, 0.1);
+      expect(player.walkFrame).toBe(0);
+      
+      // Simulate 100ms (one frame duration)
+      player.updateAnimation(0.1);
+      player.move(Direction.Up, arena, 0.1);
+      expect(player.walkFrame).toBe(1);
+
+      // Another 100ms
+      player.updateAnimation(0.1);
+      player.move(Direction.Up, arena, 0.1);
+      expect(player.walkFrame).toBe(2);
+    });
+
+    it('should reset walk frame when not moving', () => {
+      player = new Player(0, { x: 1, y: 2 }, '#00ff00');
+      player.move(Direction.Up, arena, 0.1);
+      player.updateAnimation(0.1);
+      player.move(Direction.Up, arena, 0.1);
+      expect(player.walkFrame).toBe(1);
+
+      // Stop moving - updateAnimation resets isMoving, so next call with no move() will reset frame
+      player.updateAnimation(0.01); // This resets isMoving to false
+      // Don't call move, then update again
+      player.updateAnimation(0.01); // Now isMoving is still false, so walk frame resets
+      expect(player.walkFrame).toBe(0);
+    });
+  });
+
+  describe('death animation', () => {
+    it('should start death timer at 0', () => {
+      expect(player.deathTimer).toBe(0);
+    });
+
+    it('should have death progress 0 initially', () => {
+      expect(player.deathProgress).toBe(0);
+    });
+
+    it('should not be death animation complete when alive', () => {
+      expect(player.isDeathAnimationComplete()).toBe(false);
+    });
+
+    it('should start death animation when die() is called', () => {
+      player.die();
+      expect(player.deathTimer).toBe(0);
+      expect(player.deathProgress).toBe(0);
+    });
+
+    it('should progress death animation over time', () => {
+      player.die();
+      player.updateAnimation(0.15); // Half of 300ms
+      expect(player.deathProgress).toBeCloseTo(0.5, 1);
+    });
+
+    it('should complete death animation after 300ms', () => {
+      player.die();
+      player.updateAnimation(0.3);
+      expect(player.isDeathAnimationComplete()).toBe(true);
+      expect(player.deathProgress).toBe(1);
+    });
+
+    it('should cap death progress at 1', () => {
+      player.die();
+      player.updateAnimation(1.0); // Way more than 300ms
+      expect(player.deathProgress).toBe(1);
+    });
+
+    it('should reset animation state on reset', () => {
+      player.die();
+      player.updateAnimation(0.3);
+      player.reset({ x: 1, y: 1 });
+      expect(player.deathTimer).toBe(0);
+      expect(player.walkFrame).toBe(0);
+      expect(player.isMoving).toBe(false);
+      expect(player.isDeathAnimationComplete()).toBe(false);
+    });
+  });
 });

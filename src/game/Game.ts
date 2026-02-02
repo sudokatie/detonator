@@ -95,6 +95,11 @@ export class Game {
   }
 
   update(dt: number): void {
+    // Update player animations even when not playing (for death animation to complete)
+    for (const player of this._players) {
+      player.updateAnimation(dt);
+    }
+
     if (this._state !== GameState.Playing) return;
 
     // Update round timer

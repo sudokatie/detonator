@@ -53,7 +53,7 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 ```bash
 npm install
 npm run dev     # Start dev server
-npm test        # Run tests (178 passing)
+npm test        # Run tests (191 passing)
 npm run build   # Production build (~94KB)
 ```
 

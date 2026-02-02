@@ -10,6 +10,11 @@ import {
   TILE_SIZE,
 } from './constants';
 
+// Animation constants
+const WALK_FRAME_DURATION = 0.1; // 100ms per frame
+const WALK_FRAME_COUNT = 4;
+const DEATH_ANIMATION_DURATION = 0.3; // 300ms
+
 export class Player {
   private _id: number;
   private _position: Position;
@@ -19,6 +24,12 @@ export class Player {
   private _spawnPosition: Position;
   private _activeBombs: number;
   private _color: string;
+  
+  // Animation state
+  private _walkFrame: number;
+  private _walkTimer: number;
+  private _deathTimer: number;
+  private _isMoving: boolean;
 
   constructor(id: number, spawn: Position, color: string) {
     this._id = id;
@@ -28,6 +39,10 @@ export class Player {
     this._direction = Direction.None;
     this._color = color;
     this._activeBombs = 0;
+    this._walkFrame = 0;
+    this._walkTimer = 0;
+    this._deathTimer = 0;
+    this._isMoving = false;
     this._stats = {
       bombs: DEFAULT_BOMBS,
       fire: DEFAULT_FIRE,
@@ -65,8 +80,52 @@ export class Player {
     return this._activeBombs;
   }
 
+  get walkFrame(): number {
+    return this._walkFrame;
+  }
+
+  get isMoving(): boolean {
+    return this._isMoving;
+  }
+
+  get deathTimer(): number {
+    return this._deathTimer;
+  }
+
+  get deathProgress(): number {
+    // 0 = just died, 1 = animation complete
+    return Math.min(1, this._deathTimer / DEATH_ANIMATION_DURATION);
+  }
+
+  isDeathAnimationComplete(): boolean {
+    return this._state === PlayerState.Dead && this._deathTimer >= DEATH_ANIMATION_DURATION;
+  }
+
   isAlive(): boolean {
     return this._state === PlayerState.Alive;
+  }
+
+  // Call this every frame to update animation timers
+  updateAnimation(dt: number): void {
+    // Update walk animation
+    if (this._isMoving && this._state === PlayerState.Alive) {
+      this._walkTimer += dt;
+      if (this._walkTimer >= WALK_FRAME_DURATION) {
+        this._walkTimer -= WALK_FRAME_DURATION;
+        this._walkFrame = (this._walkFrame + 1) % WALK_FRAME_COUNT;
+      }
+    } else {
+      this._walkFrame = 0;
+      this._walkTimer = 0;
+    }
+
+    // Update death animation
+    if (this._state === PlayerState.Dead && this._deathTimer < DEATH_ANIMATION_DURATION) {
+      this._deathTimer += dt;
+    }
+
+    // Reset moving flag (will be set again by move() if still moving)
+    this._isMoving = false;
   }
 
   move(direction: Direction, arena: Arena, dt: number): void {
@@ -95,6 +154,9 @@ export class Player {
     }
 
     // Check collision at new position
+    const oldX = this._position.x;
+    const oldY = this._position.y;
+    
     if (this.canMoveTo(newX, newY, arena)) {
       this._position.x = newX;
       this._position.y = newY;
@@ -109,6 +171,11 @@ export class Player {
           this._position.x = newX;
         }
       }
+    }
+
+    // Track if player actually moved (for walk animation)
+    if (this._position.x !== oldX || this._position.y !== oldY) {
+      this._isMoving = true;
     }
   }
 
@@ -171,6 +238,7 @@ export class Player {
   die(): void {
     this._state = PlayerState.Dead;
     this._stats.alive = false;
+    this._deathTimer = 0; // Start death animation
   }
 
   addWin(): void {
@@ -182,6 +250,10 @@ export class Player {
     this._state = PlayerState.Alive;
     this._direction = Direction.None;
     this._activeBombs = 0;
+    this._walkFrame = 0;
+    this._walkTimer = 0;
+    this._deathTimer = 0;
+    this._isMoving = false;
     this._stats = {
       ...this._stats,
       bombs: DEFAULT_BOMBS,

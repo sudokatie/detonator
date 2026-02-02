@@ -100,34 +100,70 @@ export class Renderer {
   drawPlayers(players: Player[]): void {
     for (const player of players) {
       if (player.isAlive()) {
-        this.drawPlayer(player);
+        this.drawPlayer(player, false);
+      } else if (!player.isDeathAnimationComplete()) {
+        // Draw death animation
+        this.drawPlayer(player, true);
       }
     }
   }
 
-  private drawPlayer(player: Player): void {
+  private drawPlayer(player: Player, isDying: boolean): void {
     const pos = player.position;
-    const px = pos.x * TILE_SIZE;
-    const py = pos.y * TILE_SIZE;
-    const size = TILE_SIZE - 4;
-    const offset = 2;
+    let px = pos.x * TILE_SIZE;
+    let py = pos.y * TILE_SIZE;
+    let size = TILE_SIZE - 4;
+    const baseOffset = 2;
+    let alpha = 1;
 
-    // Shadow
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    this.ctx.beginPath();
-    this.ctx.ellipse(px + TILE_SIZE / 2 + 2, py + TILE_SIZE - 4, size / 2.5, 4, 0, 0, Math.PI * 2);
-    this.ctx.fill();
+    // Walk animation: bob up and down based on frame
+    if (!isDying && player.isMoving) {
+      const walkBob = [0, -2, 0, -2][player.walkFrame]; // Frames 0,2 = normal, 1,3 = bobbed up
+      py += walkBob;
+    }
+
+    // Death animation: shrink and fade
+    if (isDying) {
+      const progress = player.deathProgress; // 0 to 1
+      const scale = 1 - progress; // 1 to 0
+      alpha = 1 - progress; // 1 to 0
+      
+      // Shrink toward center
+      const shrinkAmount = (TILE_SIZE - 4) * (1 - scale) / 2;
+      px += shrinkAmount;
+      py += shrinkAmount;
+      size = (TILE_SIZE - 4) * scale;
+      
+      if (size < 1) return; // Too small to draw
+    }
+
+    this.ctx.save();
+    this.ctx.globalAlpha = alpha;
+
+    // Shadow (skip during death animation for cleaner effect)
+    if (!isDying) {
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      this.ctx.beginPath();
+      this.ctx.ellipse(px + size / 2 + baseOffset + 2, py + size + baseOffset - 2, size / 2.5, 4, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
 
     // Body
     this.ctx.fillStyle = player.color;
-    this.ctx.fillRect(px + offset, py + offset, size, size);
+    this.ctx.fillRect(px + baseOffset, py + baseOffset, size, size);
     
-    // Inner highlight
-    this.ctx.fillStyle = this.lightenColor(player.color);
-    this.ctx.fillRect(px + offset + 2, py + offset + 2, size / 3, size / 3);
+    // Inner highlight (scale with size)
+    if (size > 8) {
+      this.ctx.fillStyle = this.lightenColor(player.color);
+      this.ctx.fillRect(px + baseOffset + 2, py + baseOffset + 2, size / 3, size / 3);
+    }
 
-    // Eyes based on direction
-    this.drawPlayerEyes(px, py, player.direction);
+    // Eyes based on direction (only if big enough)
+    if (size > 16 && !isDying) {
+      this.drawPlayerEyes(px, py, player.direction);
+    }
+
+    this.ctx.restore();
   }
 
   private drawPlayerEyes(px: number, py: number, direction: Direction): void {

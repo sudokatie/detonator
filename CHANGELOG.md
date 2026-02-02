@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.1] - 2026-02-01
+
+### Added
+- Walk animation (4 frames, 100ms each) - players bob while moving
+- Death animation (shrink + fade, 300ms) - visual feedback when killed
+- 13 new animation tests
+
+### Changed
+- Player class now tracks animation state (walkFrame, deathTimer)
+- Renderer draws death animation for recently killed players
+
 ## [0.1.0] - 2026-02-01
 
 ### Added
