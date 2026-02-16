@@ -16,6 +16,7 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 - Power-ups: more bombs, longer flames, faster legs
 - Best-of-3 matches so losing once doesn't end friendships
 - Retro synthesized sound effects (explosions, deaths, victory fanfares)
+- Local leaderboard tracking wins (bragging rights persist)
 
 ## Controls
 
@@ -54,7 +55,7 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 ```bash
 npm install
 npm run dev     # Start dev server
-npm test        # Run tests (201 passing)
+npm test        # Run tests (230 passing)
 npm run build   # Production build (~94KB)
 ```
 
