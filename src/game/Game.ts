@@ -4,6 +4,7 @@ import { Player } from './Player';
 import { BombManager } from './Bomb';
 import { PowerUpManager } from './PowerUp';
 import { SPAWN_POINTS, PLAYER_COLORS, ROUNDS_TO_WIN, ROUND_TIME } from './constants';
+import { Sound } from './Sound';
 
 export class Game {
   private _arena: Arena;
@@ -80,6 +81,7 @@ export class Game {
   start(): void {
     this._state = GameState.Playing;
     this.resetRound();
+    Sound.play('roundStart');
   }
 
   pause(): void {
@@ -112,9 +114,15 @@ export class Game {
     // Update bombs and explosions
     const bombResult = this._bombManager.update(dt, this._arena);
 
+    // Play explosion sound if any bombs exploded
+    if (bombResult.exploded && bombResult.exploded.length > 0) {
+      Sound.play('explosion');
+    }
+
     // Handle new power-ups from destroyed blocks
     for (const pu of bombResult.powerUps) {
       this._powerUpManager.spawn(pu.position, pu.type);
+      Sound.play('blockBreak');
     }
 
     // Check for power-ups destroyed by explosions
@@ -138,6 +146,7 @@ export class Game {
       const gridPos = player.getGridPosition();
       if (this._bombManager.isExplosion(gridPos.x, gridPos.y)) {
         player.die();
+        Sound.play('death');
       }
     }
 
@@ -151,6 +160,7 @@ export class Game {
       if (type) {
         player.collectPowerUp(type);
         this._arena.setTile(gridPos.x, gridPos.y, 0); // Floor
+        Sound.play('powerUp');
       }
     }
 
@@ -186,6 +196,7 @@ export class Game {
     }
 
     this._arena.setTile(pos.x, pos.y, 3); // Bomb tile type
+    Sound.play('bombPlace');
     return true;
   }
 
@@ -209,17 +220,20 @@ export class Game {
       if (this._players[winnerId].stats.wins >= this._roundsToWin) {
         this._matchWinner = winnerId;
         this._state = GameState.GameEnd;
+        Sound.play('victory');
         return;
       }
     }
 
     this._state = GameState.RoundEnd;
+    Sound.play('roundEnd');
   }
 
   nextRound(): void {
     if (this._state !== GameState.RoundEnd) return;
     this.resetRound();
     this._state = GameState.Playing;
+    Sound.play('roundStart');
   }
 
   private resetRound(): void {
