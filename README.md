@@ -15,7 +15,7 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 - Chain reaction explosions (the best part)
 - Power-ups: more bombs, longer flames, faster legs
 - Best-of-3 matches so losing once doesn't end friendships
-- Retro synthesized sound effects (explosions, deaths, victory fanfares)
+- Retro synthesized sound effects and background music (explosions, deaths, victory fanfares)
 - Local leaderboard tracking wins (bragging rights persist)
 
 ## Controls
