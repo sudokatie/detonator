@@ -20,6 +20,7 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 
 ## Controls
 
+### Keyboard
 | Player | Move | Bomb |
 |--------|------|------|
 | P1 (Green) | WASD | Space |
@@ -28,6 +29,12 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 | P4 (Yellow) | Numpad 8456 | Numpad 0 |
 
 **ESC** - Pause (for bathroom breaks and rage quits)
+
+### Mobile / Touch (Player 1 only)
+| Gesture | Action |
+|---------|--------|
+| Swipe | Move |
+| Tap | Place bomb |
 
 ## How to Play
 
