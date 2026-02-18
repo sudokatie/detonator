@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { InputHandler } from '../game/Input';
 import { Direction } from '../game/types';
 
@@ -47,6 +50,64 @@ describe('InputHandler', () => {
     it('should not throw in non-browser environment', () => {
       expect(() => input.attach()).not.toThrow();
       expect(() => input.detach()).not.toThrow();
+    });
+  });
+
+  describe('touch input for player 0', () => {
+    beforeEach(() => {
+      input.attach();
+    });
+
+    afterEach(() => {
+      input.detach();
+    });
+
+    function createTouchEvent(type: string, x: number, y: number): TouchEvent {
+      const touch = {
+        clientX: x,
+        clientY: y,
+        identifier: 0,
+        target: document.body,
+      } as Touch;
+      
+      return new TouchEvent(type, {
+        touches: type === 'touchstart' ? [touch] : [],
+        changedTouches: [touch],
+      });
+    }
+
+    it('should handle swipe right', () => {
+      window.dispatchEvent(createTouchEvent('touchstart', 100, 100));
+      window.dispatchEvent(createTouchEvent('touchend', 200, 100));
+      expect(input.getDirection(0)).toBe(Direction.Right);
+    });
+
+    it('should handle swipe left', () => {
+      window.dispatchEvent(createTouchEvent('touchstart', 200, 100));
+      window.dispatchEvent(createTouchEvent('touchend', 100, 100));
+      expect(input.getDirection(0)).toBe(Direction.Left);
+    });
+
+    it('should handle swipe up', () => {
+      window.dispatchEvent(createTouchEvent('touchstart', 100, 200));
+      window.dispatchEvent(createTouchEvent('touchend', 100, 100));
+      expect(input.getDirection(0)).toBe(Direction.Up);
+    });
+
+    it('should handle swipe down', () => {
+      window.dispatchEvent(createTouchEvent('touchstart', 100, 100));
+      window.dispatchEvent(createTouchEvent('touchend', 100, 200));
+      expect(input.getDirection(0)).toBe(Direction.Down);
+    });
+
+    it('should call bomb callback on tap', () => {
+      const callback = jest.fn();
+      input.setCallback(callback);
+      
+      window.dispatchEvent(createTouchEvent('touchstart', 100, 100));
+      window.dispatchEvent(createTouchEvent('touchend', 105, 105));
+      
+      expect(callback).toHaveBeenCalledWith(0, 'bomb');
     });
   });
 });
