@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { GameState } from '../game/types';
 import GameCanvas from '../components/GameCanvas';
 import MainMenu from '../components/MainMenu';
 import PauseMenu from '../components/PauseMenu';
 import RoundEnd from '../components/RoundEnd';
 import GameOver from '../components/GameOver';
+import { Music } from '../game/Music';
 
 type AppState = 'menu' | 'playing' | 'paused' | 'roundEnd' | 'gameOver';
 
@@ -75,6 +76,31 @@ export default function Home() {
     setMatchWinner(null);
     setRoundWinner(null);
   }, []);
+
+  // Switch music tracks based on game state
+  useEffect(() => {
+    switch (appState) {
+      case 'menu':
+        Music.play('menu');
+        break;
+      case 'playing':
+        Music.play('gameplay');
+        break;
+      case 'roundEnd':
+        Music.play('victory');
+        break;
+      case 'gameOver':
+        if (matchWinner !== null) {
+          Music.play('victory');
+        } else {
+          Music.play('gameover');
+        }
+        break;
+      case 'paused':
+        // Keep current track but could lower volume or stop
+        break;
+    }
+  }, [appState, matchWinner]);
 
   if (appState === 'menu') {
     return <MainMenu onStart={handleStart} />;

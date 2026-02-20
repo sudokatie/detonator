@@ -3,7 +3,7 @@
  * Generates retro-style chiptune background music.
  */
 
-type MusicTrack = 'gameplay' | 'menu' | 'victory';
+type MusicTrack = 'gameplay' | 'menu' | 'victory' | 'gameover';
 
 interface Note {
   frequency: number;
@@ -147,6 +147,101 @@ class MusicSystem {
     }));
   }
 
+  // Menu track - calmer, anticipatory
+  private getMenuNotes(): Note[] {
+    const bpm = 100;
+    const beat = 60 / bpm;
+    const quarter = beat;
+    const half = beat * 2;
+    
+    const melody = [
+      // Gentle arpeggios
+      { note: 'C4', dur: quarter, volume: 0.7 },
+      { note: 'E4', dur: quarter, volume: 0.7 },
+      { note: 'G4', dur: quarter, volume: 0.7 },
+      { note: 'E4', dur: quarter, volume: 0.7 },
+      { note: 'C4', dur: half, volume: 0.6 },
+      // Second phrase
+      { note: 'D4', dur: quarter, volume: 0.7 },
+      { note: 'F4', dur: quarter, volume: 0.7 },
+      { note: 'A4', dur: quarter, volume: 0.7 },
+      { note: 'F4', dur: quarter, volume: 0.7 },
+      { note: 'D4', dur: half, volume: 0.6 },
+      // Resolution
+      { note: 'E4', dur: quarter, volume: 0.7 },
+      { note: 'G4', dur: quarter, volume: 0.7 },
+      { note: 'C5', dur: half, volume: 0.8 },
+      { note: 'G4', dur: quarter, volume: 0.6 },
+      { note: 'E4', dur: quarter, volume: 0.5 },
+    ];
+    
+    return melody.map(n => ({
+      frequency: this.noteToFreq(n.note),
+      duration: n.dur,
+      volume: n.volume,
+    }));
+  }
+
+  // Victory track - triumphant fanfare
+  private getVictoryNotes(): Note[] {
+    const bpm = 120;
+    const beat = 60 / bpm;
+    const eighth = beat / 2;
+    const quarter = beat;
+    const half = beat * 2;
+    
+    const melody = [
+      // Fanfare
+      { note: 'C4', dur: eighth },
+      { note: 'E4', dur: eighth },
+      { note: 'G4', dur: eighth },
+      { note: 'C5', dur: quarter },
+      { note: 'G4', dur: eighth },
+      { note: 'C5', dur: half },
+      // Ascending triumph
+      { note: 'E5', dur: eighth },
+      { note: 'D5', dur: eighth },
+      { note: 'E5', dur: quarter },
+      { note: 'G5', dur: half },
+      // Final flourish
+      { note: 'E5', dur: eighth },
+      { note: 'F5', dur: eighth },
+      { note: 'G5', dur: quarter },
+      { note: 'C5', dur: half },
+    ];
+    
+    return melody.map(n => ({
+      frequency: this.noteToFreq(n.note),
+      duration: n.dur,
+    }));
+  }
+
+  // Game over track - somber, descending
+  private getGameoverNotes(): Note[] {
+    const bpm = 80;
+    const beat = 60 / bpm;
+    const quarter = beat;
+    const half = beat * 2;
+    
+    const melody = [
+      // Descending pattern
+      { note: 'E4', dur: quarter, volume: 0.8 },
+      { note: 'D4', dur: quarter, volume: 0.7 },
+      { note: 'C4', dur: half, volume: 0.6 },
+      { note: 'B3', dur: quarter, volume: 0.5 },
+      { note: 'A3', dur: quarter, volume: 0.4 },
+      { note: 'G3', dur: half, volume: 0.3 },
+      // Final low note
+      { note: 'C3', dur: half * 2, volume: 0.4 },
+    ];
+    
+    return melody.map(n => ({
+      frequency: this.noteToFreq(n.note),
+      duration: n.dur,
+      volume: n.volume,
+    }));
+  }
+
   private scheduleTrack(notes: Note[]): number {
     const ctx = this.getContext();
     if (!ctx) return 0;
@@ -184,9 +279,16 @@ class MusicSystem {
 
     let notes: Note[];
     switch (this.currentTrack) {
-      case 'gameplay':
-        notes = this.getGameplayNotes();
+      case 'menu':
+        notes = this.getMenuNotes();
         break;
+      case 'victory':
+        notes = this.getVictoryNotes();
+        break;
+      case 'gameover':
+        notes = this.getGameoverNotes();
+        break;
+      case 'gameplay':
       default:
         notes = this.getGameplayNotes();
     }
