@@ -38,7 +38,7 @@ export class Leaderboard {
       this.entries = [];
     }
 
-    return this.entries;
+    return this.entries ?? [];
   }
 
   /**
