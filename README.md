@@ -11,12 +11,14 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 ## Features
 
 - 2-4 player local multiplayer on a single keyboard (yes, it works)
+- Online multiplayer with room codes (blow up strangers too)
 - Classic 13x11 arena with destructible blocks
 - Chain reaction explosions (the best part)
 - Power-ups: more bombs, longer flames, faster legs
 - Best-of-3 matches so losing once doesn't end friendships
 - Retro synthesized sound effects and background music (explosions, deaths, victory fanfares)
 - Local leaderboard tracking wins (bragging rights persist)
+- Client-side prediction for smooth online play
 
 ## Controls
 
@@ -51,6 +53,46 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 - **F** (Red) - Longer explosion range. Reach across the map.
 - **S** (Yellow) - Speed boost. Outrun your own mistakes.
 
+## Online Multiplayer
+
+Play with friends (or enemies) over the internet.
+
+### Quick Start
+1. One player creates a room (gets a 4-letter code)
+2. Share the code with friends
+3. Everyone joins with the code
+4. Host starts when everyone's ready
+5. Explosions ensue
+
+### Controls (Online)
+| Input | Action |
+|-------|--------|
+| WASD or Arrow Keys | Move |
+| Space or Enter | Place bomb |
+
+### Running the Server
+
+```bash
+# From the server/ directory
+npm install
+npm run build
+npm start
+
+# Or with Docker
+docker build -t detonator-server .
+docker run -p 8080:8080 detonator-server
+```
+
+The server exposes:
+- WebSocket on port 8080 (game traffic)
+- GET /health (health check)
+
+### Network Notes
+- Server syncs game state at 20 Hz
+- Client-side prediction keeps movement smooth
+- Interpolation smooths other players' movement
+- If you lag, you'll see position corrections (reconciliation)
+
 ## Philosophy
 
 1. Local multiplayer matters. Stop killing it.
@@ -62,7 +104,7 @@ This is that game. Drop bombs. Collect power-ups. Be the last one standing. It's
 ```bash
 npm install
 npm run dev     # Start dev server
-npm test        # Run tests (230 passing)
+npm test        # Run tests (403 passing)
 npm run build   # Production build (~94KB)
 ```
 
