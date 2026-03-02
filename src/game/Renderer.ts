@@ -409,4 +409,209 @@ export class Renderer {
     
     return `rgb(${lighten(r)}, ${lighten(g)}, ${lighten(b)})`;
   }
+
+  // Online mode rendering methods (from server state)
+
+  drawArenaFromState(arena: { width: number; height: number; tiles: number[][] }): void {
+    for (let y = 0; y < arena.tiles.length; y++) {
+      for (let x = 0; x < arena.tiles[y].length; x++) {
+        this.drawTile(x, y, arena.tiles[y][x] as TileType);
+      }
+    }
+  }
+
+  drawPlayersFromState(
+    players: Array<{
+      slot: number;
+      x: number;
+      y: number;
+      alive: boolean;
+      animationFrame: number;
+    }>,
+    mySlot: number
+  ): void {
+    const playerColors = ['#22c55e', '#ef4444', '#3b82f6', '#eab308']; // green, red, blue, yellow
+
+    for (const player of players) {
+      if (!player.alive) continue;
+
+      const px = player.x * TILE_SIZE;
+      const py = player.y * TILE_SIZE;
+      const size = TILE_SIZE - 4;
+      const baseOffset = 2;
+      const color = playerColors[player.slot] || '#ffffff';
+
+      // Highlight for own player
+      if (player.slot === mySlot) {
+        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(px + baseOffset - 2, py + baseOffset - 2, size + 4, size + 4);
+      }
+
+      // Shadow
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      this.ctx.beginPath();
+      this.ctx.ellipse(px + size / 2 + baseOffset + 2, py + size + baseOffset - 2, size / 2.5, 4, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Body
+      this.ctx.fillStyle = color;
+      this.ctx.fillRect(px + baseOffset, py + baseOffset, size, size);
+      
+      // Inner highlight
+      this.ctx.fillStyle = this.lightenColor(color);
+      this.ctx.fillRect(px + baseOffset + 2, py + baseOffset + 2, size / 3, size / 3);
+
+      // Eyes
+      this.drawPlayerEyes(px, py, Direction.Down);
+    }
+  }
+
+  drawBombsFromState(bombs: Array<{ x: number; y: number; timer: number; fire: number; owner: number }>): void {
+    for (const bomb of bombs) {
+      const px = bomb.x * TILE_SIZE + TILE_SIZE / 2;
+      const py = bomb.y * TILE_SIZE + TILE_SIZE / 2;
+      
+      const pulse = Math.sin(bomb.timer * 10) * 2;
+      const radius = 10 + pulse;
+
+      // Bomb body
+      this.ctx.fillStyle = COLORS.bomb;
+      this.ctx.beginPath();
+      this.ctx.arc(px, py, radius, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Highlight
+      this.ctx.fillStyle = '#333333';
+      this.ctx.beginPath();
+      this.ctx.arc(px - 3, py - 3, radius * 0.3, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Fuse
+      this.ctx.strokeStyle = COLORS.bombFuse;
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(px + radius - 3, py - radius + 3);
+      this.ctx.lineTo(px + radius + 4, py - radius - 4);
+      this.ctx.stroke();
+
+      // Fuse spark
+      if (Math.sin(this.animFrame * 0.5) > 0) {
+        this.ctx.fillStyle = '#ffff00';
+        this.ctx.beginPath();
+        this.ctx.arc(px + radius + 4, py - radius - 4, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+    }
+  }
+
+  drawExplosionsFromState(
+    explosions: Array<{ tiles: { x: number; y: number }[]; timer: number; phase: string }>
+  ): void {
+    for (const explosion of explosions) {
+      const scale = explosion.phase === 'expand' ? 0.5 + explosion.timer * 0.5 :
+                    explosion.phase === 'full' ? 1 :
+                    1 - explosion.timer;
+      const opacity = explosion.phase === 'fade' ? 1 - explosion.timer : 1;
+
+      this.ctx.save();
+      this.ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
+
+      for (const tile of explosion.tiles) {
+        const px = tile.x * TILE_SIZE;
+        const py = tile.y * TILE_SIZE;
+        const size = TILE_SIZE * scale;
+        const offset = (TILE_SIZE - size) / 2;
+
+        const gradient = this.ctx.createRadialGradient(
+          px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0,
+          px + TILE_SIZE / 2, py + TILE_SIZE / 2, size / 2
+        );
+        gradient.addColorStop(0, COLORS.explosionCenter);
+        gradient.addColorStop(1, COLORS.explosionOuter);
+
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(px + offset, py + offset, size, size);
+      }
+
+      this.ctx.restore();
+    }
+  }
+
+  drawPowerUpsFromState(powerUps: Array<{ x: number; y: number; type: string }>): void {
+    for (const pu of powerUps) {
+      const px = pu.x * TILE_SIZE;
+      const py = pu.y * TILE_SIZE;
+      const bounce = Math.sin(this.animFrame * 0.1) * 2;
+
+      let color: string;
+      let symbol: string;
+
+      switch (pu.type) {
+        case 'bomb':
+          color = COLORS.powerUpBomb;
+          symbol = 'B';
+          break;
+        case 'fire':
+          color = COLORS.powerUpFire;
+          symbol = 'F';
+          break;
+        case 'speed':
+          color = COLORS.powerUpSpeed;
+          symbol = 'S';
+          break;
+        default:
+          color = '#ffffff';
+          symbol = '?';
+      }
+
+      this.ctx.fillStyle = color;
+      this.ctx.fillRect(px + 4, py + 4 + bounce, TILE_SIZE - 8, TILE_SIZE - 8);
+
+      this.ctx.strokeStyle = '#ffffff';
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeRect(px + 4, py + 4 + bounce, TILE_SIZE - 8, TILE_SIZE - 8);
+
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.font = 'bold 16px Arial';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(symbol, px + TILE_SIZE / 2, py + TILE_SIZE / 2 + bounce);
+    }
+  }
+
+  drawOnlineHUD(scores: number[], round: number, maxRounds: number, roundTime: number): void {
+    const playerColors = ['#22c55e', '#ef4444', '#3b82f6', '#eab308'];
+
+    // Timer
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = 'bold 20px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'top';
+    const minutes = Math.floor(roundTime / 60);
+    const seconds = Math.floor(roundTime % 60);
+    const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    this.ctx.fillText(timeStr, CANVAS_WIDTH / 2, 5);
+
+    // Round indicator
+    this.ctx.font = '14px Arial';
+    this.ctx.fillText(`Round ${round}/${maxRounds}`, CANVAS_WIDTH / 2, 28);
+
+    // Scores (bottom)
+    this.ctx.font = '14px Arial';
+    this.ctx.textAlign = 'left';
+    
+    const statsY = CANVAS_HEIGHT - 18;
+    const playerWidth = CANVAS_WIDTH / scores.length;
+    
+    for (let i = 0; i < scores.length; i++) {
+      const x = i * playerWidth + 5;
+      
+      this.ctx.fillStyle = playerColors[i] || '#ffffff';
+      this.ctx.fillRect(x, statsY, 12, 12);
+      
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillText(`P${i + 1}: ${scores[i]}`, x + 16, statsY + 10);
+    }
+  }
 }
