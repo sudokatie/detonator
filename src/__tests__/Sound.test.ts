@@ -55,9 +55,14 @@ const mockAudioContext = {
 };
 
 // Mock window.AudioContext
-(global as any).window = {
-  AudioContext: jest.fn(() => mockAudioContext),
-};
+Object.defineProperty(global, 'AudioContext', {
+  writable: true,
+  value: jest.fn(() => mockAudioContext),
+});
+Object.defineProperty(window, 'AudioContext', {
+  writable: true,
+  value: jest.fn(() => mockAudioContext),
+});
 
 describe('Sound System', () => {
   beforeEach(() => {
