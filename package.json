@@ -8,12 +8,16 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "server": "npx ts-node server/index.ts",
+    "server:build": "npx tsc server/index.ts server/types.ts --outDir dist/server --esModuleInterop"
   },
   "dependencies": {
+    "@types/ws": "^8.18.1",
     "next": "^14",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16",
