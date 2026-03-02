@@ -4,6 +4,7 @@
  * WebSocket server for online multiplayer Bomberman.
  */
 
+import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { ClientMessage, ServerMessage, Client } from './types';
 
@@ -120,17 +121,47 @@ function pingClients(): void {
   }
 }
 
+// HTTP request handler for health checks
+function handleHttpRequest(req: IncomingMessage, res: ServerResponse): void {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'healthy',
+      clients: clients.size,
+      uptime: process.uptime(),
+    }));
+    return;
+  }
+
+  if (req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Detonator Multiplayer Server');
+    return;
+  }
+
+  res.writeHead(404);
+  res.end('Not Found');
+}
+
 // Start server
 function start(): void {
-  const wss = new WebSocketServer({ port: PORT });
+  // Create HTTP server for health checks
+  const server = createServer(handleHttpRequest);
+  
+  // Attach WebSocket server
+  const wss = new WebSocketServer({ server });
   
   wss.on('connection', handleConnection);
-  
-  wss.on('listening', () => {
+
+  wss.on('error', (err) => {
+    console.error('WebSocket error:', err.message);
+  });
+
+  server.listen(PORT, () => {
     console.log(`Detonator server listening on port ${PORT}`);
   });
 
-  wss.on('error', (err) => {
+  server.on('error', (err) => {
     console.error('Server error:', err.message);
   });
 
