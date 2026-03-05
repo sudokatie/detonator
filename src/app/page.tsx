@@ -18,10 +18,20 @@ export default function Home() {
   const [roundWinner, setRoundWinner] = useState<number | null>(null);
   const [matchWinner, setMatchWinner] = useState<number | null>(null);
   const [gameKey, setGameKey] = useState(0);
+  const [dailyMode, setDailyMode] = useState(false);
 
   const handleStart = useCallback((count: number, rounds: number) => {
     setPlayerCount(count);
     setRoundsToWin(rounds);
+    setDailyMode(false);
+    setAppState('playing');
+    setGameKey((k) => k + 1);
+  }, []);
+
+  const handleStartDaily = useCallback(() => {
+    setPlayerCount(2); // Daily is 1v1
+    setRoundsToWin(3);
+    setDailyMode(true);
     setAppState('playing');
     setGameKey((k) => k + 1);
   }, []);
@@ -103,7 +113,7 @@ export default function Home() {
   }, [appState, matchWinner]);
 
   if (appState === 'menu') {
-    return <MainMenu onStart={handleStart} />;
+    return <MainMenu onStart={handleStart} onStartDaily={handleStartDaily} />;
   }
 
   return (
@@ -113,6 +123,7 @@ export default function Home() {
           key={gameKey}
           playerCount={playerCount}
           roundsToWin={roundsToWin}
+          dailyMode={dailyMode}
           onStateChange={handleStateChange}
           onRoundEnd={handleRoundEnd}
           onMatchEnd={handleMatchEnd}

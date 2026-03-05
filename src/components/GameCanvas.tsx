@@ -10,12 +10,13 @@ import { DISPLAY_WIDTH, DISPLAY_HEIGHT, CANVAS_SCALE } from '../game/constants';
 interface GameCanvasProps {
   playerCount: number;
   roundsToWin?: number;
+  dailyMode?: boolean;
   onStateChange?: (state: GameState) => void;
   onRoundEnd?: (winnerId: number | null) => void;
   onMatchEnd?: (winnerId: number | null) => void;
 }
 
-export default function GameCanvas({ playerCount, roundsToWin = 3, onStateChange, onRoundEnd, onMatchEnd }: GameCanvasProps) {
+export default function GameCanvas({ playerCount, roundsToWin = 3, dailyMode = false, onStateChange, onRoundEnd, onMatchEnd }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<Game | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -101,7 +102,11 @@ export default function GameCanvas({ playerCount, roundsToWin = 3, onStateChange
     input.attach();
 
     // Start the game
-    game.start();
+    if (dailyMode) {
+      game.startDaily();
+    } else {
+      game.start();
+    }
 
     // Start game loop
     lastTimeRef.current = performance.now();
@@ -114,7 +119,7 @@ export default function GameCanvas({ playerCount, roundsToWin = 3, onStateChange
       }
       input.detach();
     };
-  }, [playerCount, roundsToWin, gameLoop]);
+  }, [playerCount, roundsToWin, dailyMode, gameLoop]);
 
   // Handle pause/resume with Escape key
   useEffect(() => {

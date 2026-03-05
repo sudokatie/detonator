@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { todayString } from '@/game/Daily';
 
 interface MainMenuProps {
   onStart: (playerCount: number, roundsToWin: number) => void;
+  onStartDaily?: () => void;
 }
 
-export default function MainMenu({ onStart }: MainMenuProps) {
+export default function MainMenu({ onStart, onStartDaily }: MainMenuProps) {
   const [playerCount, setPlayerCount] = useState(2);
   const [roundsToWin, setRoundsToWin] = useState(3);
 
@@ -89,6 +91,18 @@ export default function MainMenu({ onStart }: MainMenuProps) {
         >
           START GAME
         </button>
+
+        {onStartDaily && (
+          <div className="mt-4">
+            <button
+              onClick={onStartDaily}
+              className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded transition-colors"
+            >
+              DAILY CHALLENGE
+            </button>
+            <p className="text-purple-300 text-sm text-center mt-1">{todayString()}</p>
+          </div>
+        )}
 
         <p className="mt-4 text-center text-gray-400 text-sm">
           Press ESC to pause during game
