@@ -5,6 +5,7 @@ import { BombManager } from './Bomb';
 import { PowerUpManager } from './PowerUp';
 import { SPAWN_POINTS, PLAYER_COLORS, ROUNDS_TO_WIN, ROUND_TIME } from './constants';
 import { Sound } from './Sound';
+import { SeededRNG, todaySeed, todayString, DailyLeaderboard } from './Daily';
 
 export class Game {
   private _arena: Arena;
@@ -16,6 +17,12 @@ export class Game {
   private _matchWinner: number | null;
   private _roundWinner: number | null;
   private _roundsToWin: number;
+
+  // Daily challenge state
+  private _dailyMode: boolean = false;
+  private _dailySeed: number = 0;
+  private _dailyDate: string = '';
+  private _dailyRng: SeededRNG | null = null;
 
   constructor(playerCount: number = 2, roundsToWin: number = ROUNDS_TO_WIN) {
     this._arena = new Arena();
@@ -80,8 +87,31 @@ export class Game {
 
   start(): void {
     this._state = GameState.Playing;
+    this._dailyMode = false;
+    this._dailyRng = null;
     this.resetRound();
     Sound.play('roundStart');
+  }
+
+  /** Start a daily challenge run */
+  startDaily(): void {
+    this._state = GameState.Playing;
+    this._dailyMode = true;
+    this._dailySeed = todaySeed();
+    this._dailyDate = todayString();
+    this._dailyRng = new SeededRNG(this._dailySeed);
+    this.resetRound();
+    Sound.play('roundStart');
+  }
+
+  /** Check if currently in daily mode */
+  isDailyMode(): boolean {
+    return this._dailyMode;
+  }
+
+  /** Get today's daily leaderboard */
+  getDailyLeaderboard(): ReturnType<typeof DailyLeaderboard.getToday> {
+    return DailyLeaderboard.getToday();
   }
 
   pause(): void {
@@ -221,6 +251,13 @@ export class Game {
         this._matchWinner = winnerId;
         this._state = GameState.GameEnd;
         Sound.play('victory');
+        
+        // Record to daily leaderboard if in daily mode (player 0 wins count as score)
+        if (this._dailyMode && winnerId === 0) {
+          const stats = this._players[0].stats;
+          const score = stats.wins * 1000 + stats.kills * 100;
+          DailyLeaderboard.recordScore('Player', score, stats.wins);
+        }
         return;
       }
     }
@@ -251,6 +288,12 @@ export class Game {
   reset(): void {
     this._matchWinner = null;
     this._state = GameState.Menu;
+    
+    // Clear daily mode state
+    this._dailyMode = false;
+    this._dailySeed = 0;
+    this._dailyDate = '';
+    this._dailyRng = null;
     
     // Recreate players to fully reset (including wins)
     const playerCount = this._players.length;
