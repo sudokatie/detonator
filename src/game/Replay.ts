@@ -1,4 +1,4 @@
-import type { Direction } from './types';
+import { Direction } from './types';
 
 /**
  * Types of actions that can be recorded
@@ -34,10 +34,11 @@ export interface ReplayData {
  */
 function encodeDirection(dir: Direction): string {
   switch (dir) {
-    case 'up': return 'u';
-    case 'down': return 'd';
-    case 'left': return 'l';
-    case 'right': return 'r';
+    case Direction.Up: return 'u';
+    case Direction.Down: return 'd';
+    case Direction.Left: return 'l';
+    case Direction.Right: return 'r';
+    case Direction.None: return 'n';
   }
 }
 
@@ -46,10 +47,11 @@ function encodeDirection(dir: Direction): string {
  */
 function decodeDirection(char: string): Direction | null {
   switch (char) {
-    case 'u': return 'up';
-    case 'd': return 'down';
-    case 'l': return 'left';
-    case 'r': return 'right';
+    case 'u': return Direction.Up;
+    case 'd': return Direction.Down;
+    case 'l': return Direction.Left;
+    case 'r': return Direction.Right;
+    case 'n': return Direction.None;
     default: return null;
   }
 }

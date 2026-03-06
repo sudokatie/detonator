@@ -6,9 +6,10 @@ import { todayString } from '@/game/Daily';
 interface MainMenuProps {
   onStart: (playerCount: number, roundsToWin: number) => void;
   onStartDaily?: () => void;
+  onWatchReplay?: () => void;
 }
 
-export default function MainMenu({ onStart, onStartDaily }: MainMenuProps) {
+export default function MainMenu({ onStart, onStartDaily, onWatchReplay }: MainMenuProps) {
   const [playerCount, setPlayerCount] = useState(2);
   const [roundsToWin, setRoundsToWin] = useState(3);
 
@@ -102,6 +103,15 @@ export default function MainMenu({ onStart, onStartDaily }: MainMenuProps) {
             </button>
             <p className="text-purple-300 text-sm text-center mt-1">{todayString()}</p>
           </div>
+        )}
+
+        {onWatchReplay && (
+          <button
+            onClick={onWatchReplay}
+            className="w-full mt-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-medium rounded transition-colors"
+          >
+            Watch Replay
+          </button>
         )}
 
         <p className="mt-4 text-center text-gray-400 text-sm">

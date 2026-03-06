@@ -7,9 +7,11 @@ interface GameOverProps {
   roundsToWin: number;
   onPlayAgain: () => void;
   onMainMenu: () => void;
+  hasReplay?: boolean;
+  onShareReplay?: () => void;
 }
 
-export default function GameOver({ winnerId, roundsToWin, onPlayAgain, onMainMenu }: GameOverProps) {
+export default function GameOver({ winnerId, roundsToWin, onPlayAgain, onMainMenu, hasReplay, onShareReplay }: GameOverProps) {
   const winnerColor = winnerId !== null ? PLAYER_COLORS[winnerId] : '#888888';
 
   return (
@@ -38,6 +40,14 @@ export default function GameOver({ winnerId, roundsToWin, onPlayAgain, onMainMen
           >
             Play Again
           </button>
+          {hasReplay && onShareReplay && (
+            <button
+              onClick={onShareReplay}
+              className="px-8 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded transition-colors"
+            >
+              Share Replay
+            </button>
+          )}
           <button
             onClick={onMainMenu}
             className="px-8 py-3 bg-gray-600 hover:bg-gray-700 text-white text-xl font-bold rounded transition-colors"

@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { GameState } from '../game/types';
+import { Game } from '../game/Game';
+import type { ReplayData } from '../game/Replay';
 import GameCanvas from '../components/GameCanvas';
 import MainMenu from '../components/MainMenu';
 import PauseMenu from '../components/PauseMenu';
 import RoundEnd from '../components/RoundEnd';
 import GameOver from '../components/GameOver';
+import { ReplayView } from '../components/ReplayView';
+import { ReplayImport } from '../components/ReplayImport';
 import { Music } from '../game/Music';
 
 type AppState = 'menu' | 'playing' | 'paused' | 'roundEnd' | 'gameOver';
@@ -19,6 +23,10 @@ export default function Home() {
   const [matchWinner, setMatchWinner] = useState<number | null>(null);
   const [gameKey, setGameKey] = useState(0);
   const [dailyMode, setDailyMode] = useState(false);
+  const [showReplayView, setShowReplayView] = useState(false);
+  const [showReplayImport, setShowReplayImport] = useState(false);
+  const [currentReplayData, setCurrentReplayData] = useState<ReplayData | null>(null);
+  const gameInstanceRef = useRef<Game | null>(null);
 
   const handleStart = useCallback((count: number, rounds: number) => {
     setPlayerCount(count);
@@ -87,6 +95,36 @@ export default function Home() {
     setRoundWinner(null);
   }, []);
 
+  const handleWatchReplay = useCallback(() => {
+    setShowReplayImport(true);
+  }, []);
+
+  const handleShareReplay = useCallback(() => {
+    const replayData = gameInstanceRef.current?.getLastReplayData();
+    if (replayData) {
+      setCurrentReplayData(replayData);
+      setShowReplayView(true);
+    }
+  }, []);
+
+  const handleImportReplay = useCallback((data: ReplayData) => {
+    setShowReplayImport(false);
+    setCurrentReplayData(data);
+    setPlayerCount(data.playerCount);
+    setDailyMode(data.dailyMode);
+    // For now, just show the replay view - full playback would need GameCanvas changes
+    setShowReplayView(true);
+  }, []);
+
+  const handleWatchCurrentReplay = useCallback(() => {
+    setShowReplayView(false);
+    // Playback mode would need deeper GameCanvas integration
+  }, []);
+
+  const handleGameReady = useCallback((game: Game) => {
+    gameInstanceRef.current = game;
+  }, []);
+
   // Switch music tracks based on game state
   useEffect(() => {
     switch (appState) {
@@ -113,7 +151,24 @@ export default function Home() {
   }, [appState, matchWinner]);
 
   if (appState === 'menu') {
-    return <MainMenu onStart={handleStart} onStartDaily={handleStartDaily} />;
+    return (
+      <>
+        <MainMenu onStart={handleStart} onStartDaily={handleStartDaily} onWatchReplay={handleWatchReplay} />
+        {showReplayImport && (
+          <ReplayImport
+            onImport={handleImportReplay}
+            onClose={() => setShowReplayImport(false)}
+          />
+        )}
+        {showReplayView && currentReplayData && (
+          <ReplayView
+            replayData={currentReplayData}
+            onClose={() => setShowReplayView(false)}
+            onWatch={handleWatchCurrentReplay}
+          />
+        )}
+      </>
+    );
   }
 
   return (
@@ -127,6 +182,7 @@ export default function Home() {
           onStateChange={handleStateChange}
           onRoundEnd={handleRoundEnd}
           onMatchEnd={handleMatchEnd}
+          onGameReady={handleGameReady}
         />
         
         {appState === 'paused' && (
@@ -143,6 +199,16 @@ export default function Home() {
             roundsToWin={roundsToWin}
             onPlayAgain={handlePlayAgain}
             onMainMenu={handleMainMenu}
+            hasReplay={!!gameInstanceRef.current?.getLastReplayData()}
+            onShareReplay={handleShareReplay}
+          />
+        )}
+        
+        {showReplayView && currentReplayData && (
+          <ReplayView
+            replayData={currentReplayData}
+            onClose={() => setShowReplayView(false)}
+            onWatch={handleWatchCurrentReplay}
           />
         )}
       </div>

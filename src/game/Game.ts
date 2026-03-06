@@ -6,6 +6,7 @@ import { PowerUpManager } from './PowerUp';
 import { SPAWN_POINTS, PLAYER_COLORS, ROUNDS_TO_WIN, ROUND_TIME } from './constants';
 import { Sound } from './Sound';
 import { SeededRNG, todaySeed, todayString, DailyLeaderboard } from './Daily';
+import { Replay, ReplayData, ReplayFrame } from './Replay';
 
 export class Game {
   private _arena: Arena;
@@ -23,6 +24,13 @@ export class Game {
   private _dailySeed: number = 0;
   private _dailyDate: string = '';
   private _dailyRng: SeededRNG | null = null;
+
+  // Replay state
+  private _replay: Replay = new Replay();
+  private _isPlayback: boolean = false;
+  private _lastReplayData: ReplayData | null = null;
+  private _recordingEnabled: boolean = true;
+  private _pendingActions: ReplayFrame[] = [];
 
   constructor(playerCount: number = 2, roundsToWin: number = ROUNDS_TO_WIN) {
     this._arena = new Arena();
@@ -89,6 +97,11 @@ export class Game {
     this._state = GameState.Playing;
     this._dailyMode = false;
     this._dailyRng = null;
+    this._isPlayback = false;
+    this._pendingActions = [];
+    if (this._recordingEnabled) {
+      this._replay.startRecording(this._players.length, false);
+    }
     this.resetRound();
     Sound.play('roundStart');
   }
@@ -100,6 +113,11 @@ export class Game {
     this._dailySeed = todaySeed();
     this._dailyDate = todayString();
     this._dailyRng = new SeededRNG(this._dailySeed);
+    this._isPlayback = false;
+    this._pendingActions = [];
+    if (this._recordingEnabled) {
+      this._replay.startRecording(this._players.length, true);
+    }
     this.resetRound();
     Sound.play('roundStart');
   }
@@ -206,6 +224,10 @@ export class Game {
 
     const player = this._players[playerId];
     if (player && player.isAlive()) {
+      // Record move action (only when not in playback)
+      if (!this._isPlayback && this._recordingEnabled) {
+        this._replay.recordMove(playerId, direction);
+      }
       player.move(direction, this._arena, 1 / 60); // Assume 60fps
     }
   }
@@ -223,6 +245,11 @@ export class Game {
     if (!placed) {
       player.onBombExploded(); // Refund the bomb
       return false;
+    }
+
+    // Record bomb action (only when not in playback)
+    if (!this._isPlayback && this._recordingEnabled) {
+      this._replay.recordBomb(playerId);
     }
 
     this._arena.setTile(pos.x, pos.y, 3); // Bomb tile type
@@ -252,10 +279,16 @@ export class Game {
         this._state = GameState.GameEnd;
         Sound.play('victory');
         
+        // Stop recording and save replay
+        if (this._replay.isRecording) {
+          const roundsPlayed = this._players.reduce((sum, p) => sum + p.stats.wins, 0);
+          this._lastReplayData = this._replay.stopRecording(winnerId, roundsPlayed);
+        }
+        
         // Record to daily leaderboard if in daily mode (player 0 wins count as score)
         if (this._dailyMode && winnerId === 0) {
           const stats = this._players[0].stats;
-          const score = stats.wins * 1000 + stats.kills * 100;
+          const score = stats.wins * 1000;
           DailyLeaderboard.recordScore('Player', score, stats.wins);
         }
         return;
@@ -295,6 +328,11 @@ export class Game {
     this._dailyDate = '';
     this._dailyRng = null;
     
+    // Clear replay state
+    this._isPlayback = false;
+    this._recordingEnabled = true;
+    this._pendingActions = [];
+    
     // Recreate players to fully reset (including wins)
     const playerCount = this._players.length;
     this._players = [];
@@ -312,5 +350,104 @@ export class Game {
 
   getAlivePlayerCount(): number {
     return this._players.filter(p => p.isAlive()).length;
+  }
+
+  // ==================
+  // Replay Methods
+  // ==================
+
+  /** Start playback of a replay */
+  startPlayback(data: ReplayData): void {
+    // Reset game state for playback
+    this.reset();
+    
+    // Recreate with correct player count
+    this._players = [];
+    for (let i = 0; i < data.playerCount; i++) {
+      const spawn = SPAWN_POINTS[i];
+      this._players.push(new Player(i, spawn, PLAYER_COLORS[i]));
+    }
+    
+    this._state = GameState.Playing;
+    this._dailyMode = data.dailyMode;
+    if (this._dailyMode) {
+      this._dailySeed = todaySeed();
+      this._dailyRng = new SeededRNG(this._dailySeed);
+    }
+    
+    this._isPlayback = true;
+    this._recordingEnabled = false;
+    this._pendingActions = [];
+    
+    this._replay.startPlayback(data);
+    this.resetRound();
+  }
+
+  /** Stop replay playback */
+  stopPlayback(): void {
+    this._replay.stopPlayback();
+    this._isPlayback = false;
+    this._recordingEnabled = true;
+    this._pendingActions = [];
+    this.reset();
+  }
+
+  /** Update playback state - call in game loop */
+  updatePlayback(): void {
+    if (!this._isPlayback) return;
+    
+    // Get all ready actions
+    const actions = this._replay.getReadyActions();
+    
+    // Execute each action
+    for (const frame of actions) {
+      if (frame.action === 'move' && frame.direction) {
+        // Directly move player without re-recording
+        const player = this._players[frame.playerId];
+        if (player && player.isAlive()) {
+          player.move(frame.direction, this._arena, 1 / 60);
+        }
+      } else if (frame.action === 'bomb') {
+        // Directly place bomb without re-recording
+        const player = this._players[frame.playerId];
+        if (player && player.isAlive()) {
+          const pos = player.dropBomb();
+          if (pos) {
+            const placed = this._bombManager.placeBomb(pos, frame.playerId, player.getFireRange());
+            if (placed) {
+              this._arena.setTile(pos.x, pos.y, 3);
+              Sound.play('bombPlace');
+            } else {
+              player.onBombExploded();
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /** Check if currently in playback mode */
+  isPlayback(): boolean {
+    return this._isPlayback;
+  }
+
+  /** Get playback progress (0-1) */
+  getPlaybackProgress(): number {
+    return this._replay.playbackProgress;
+  }
+
+  /** Check if playback is complete */
+  isPlaybackComplete(): boolean {
+    return this._replay.isPlaybackComplete;
+  }
+
+  /** Get the last recorded replay data */
+  getLastReplayData(): ReplayData | null {
+    return this._lastReplayData;
+  }
+
+  /** Check if recording is enabled */
+  isRecording(): boolean {
+    return this._replay.isRecording;
   }
 }

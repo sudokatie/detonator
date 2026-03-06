@@ -1,4 +1,5 @@
 import { Replay, ReplayData, ReplayFrame } from '../Replay';
+import { Direction } from '../types';
 
 describe('Replay', () => {
   describe('recording', () => {
@@ -14,13 +15,13 @@ describe('Replay', () => {
       const replay = new Replay();
       replay.startRecording(2);
       
-      replay.recordMove(0, 'up');
-      replay.recordMove(1, 'left');
+      replay.recordMove(0, Direction.Up);
+      replay.recordMove(1, Direction.Left);
       
       const data = replay.stopRecording(0, 3);
       expect(data.frames.length).toBe(2);
       expect(data.frames[0].action).toBe('move');
-      expect(data.frames[0].direction).toBe('up');
+      expect(data.frames[0].direction).toBe(Direction.Up);
       expect(data.frames[0].playerId).toBe(0);
       expect(data.frames[1].playerId).toBe(1);
     });
@@ -70,7 +71,7 @@ describe('Replay', () => {
         timestamp: Date.now(),
         duration: 1000,
         frames: [
-          { time: 0, playerId: 0, action: 'move', direction: 'up' },
+          { time: 0, playerId: 0, action: 'move', direction: Direction.Up },
         ],
         playerCount: 2,
         finalWinner: 0,
@@ -89,7 +90,7 @@ describe('Replay', () => {
         timestamp: Date.now(),
         duration: 1000,
         frames: [
-          { time: 0, playerId: 0, action: 'move', direction: 'up' },
+          { time: 0, playerId: 0, action: 'move', direction: Direction.Up },
           { time: 10, playerId: 0, action: 'bomb' },
         ],
         playerCount: 2,
@@ -112,7 +113,7 @@ describe('Replay', () => {
         timestamp: Date.now(),
         duration: 1000,
         frames: [
-          { time: 0, playerId: 0, action: 'move', direction: 'up' },
+          { time: 0, playerId: 0, action: 'move', direction: Direction.Up },
           { time: 0, playerId: 0, action: 'bomb' },
         ],
         playerCount: 2,
@@ -157,9 +158,9 @@ describe('Replay', () => {
         timestamp: 1234567890000,
         duration: 5000,
         frames: [
-          { time: 0, playerId: 0, action: 'move', direction: 'up' },
+          { time: 0, playerId: 0, action: 'move', direction: Direction.Up },
           { time: 100, playerId: 1, action: 'bomb' },
-          { time: 200, playerId: 0, action: 'move', direction: 'left' },
+          { time: 200, playerId: 0, action: 'move', direction: Direction.Left },
         ],
         playerCount: 2,
         finalWinner: 0,
@@ -187,10 +188,10 @@ describe('Replay', () => {
         timestamp: 1000,
         duration: 500,
         frames: [
-          { time: 0, playerId: 0, action: 'move', direction: 'up' },
-          { time: 50, playerId: 0, action: 'move', direction: 'down' },
-          { time: 100, playerId: 0, action: 'move', direction: 'left' },
-          { time: 150, playerId: 0, action: 'move', direction: 'right' },
+          { time: 0, playerId: 0, action: 'move', direction: Direction.Up },
+          { time: 50, playerId: 0, action: 'move', direction: Direction.Down },
+          { time: 100, playerId: 0, action: 'move', direction: Direction.Left },
+          { time: 150, playerId: 0, action: 'move', direction: Direction.Right },
         ],
         playerCount: 2,
         finalWinner: 1,
@@ -200,10 +201,10 @@ describe('Replay', () => {
       
       const decoded = Replay.decode(Replay.encode(data));
       
-      expect(decoded!.frames[0].direction).toBe('up');
-      expect(decoded!.frames[1].direction).toBe('down');
-      expect(decoded!.frames[2].direction).toBe('left');
-      expect(decoded!.frames[3].direction).toBe('right');
+      expect(decoded!.frames[0].direction).toBe(Direction.Up);
+      expect(decoded!.frames[1].direction).toBe(Direction.Down);
+      expect(decoded!.frames[2].direction).toBe(Direction.Left);
+      expect(decoded!.frames[3].direction).toBe(Direction.Right);
     });
 
     it('should handle null winner', () => {
@@ -235,10 +236,10 @@ describe('Replay', () => {
         timestamp: 1000,
         duration: 10000,
         frames: [
-          { time: 0, playerId: 0, action: 'move', direction: 'up' },
+          { time: 0, playerId: 0, action: 'move', direction: Direction.Up },
           { time: 100, playerId: 0, action: 'bomb' },
-          { time: 200, playerId: 1, action: 'move', direction: 'down' },
-          { time: 300, playerId: 1, action: 'move', direction: 'left' },
+          { time: 200, playerId: 1, action: 'move', direction: Direction.Down },
+          { time: 300, playerId: 1, action: 'move', direction: Direction.Left },
           { time: 400, playerId: 0, action: 'bomb' },
         ],
         playerCount: 2,

@@ -14,9 +14,10 @@ interface GameCanvasProps {
   onStateChange?: (state: GameState) => void;
   onRoundEnd?: (winnerId: number | null) => void;
   onMatchEnd?: (winnerId: number | null) => void;
+  onGameReady?: (game: Game) => void;
 }
 
-export default function GameCanvas({ playerCount, roundsToWin = 3, dailyMode = false, onStateChange, onRoundEnd, onMatchEnd }: GameCanvasProps) {
+export default function GameCanvas({ playerCount, roundsToWin = 3, dailyMode = false, onStateChange, onRoundEnd, onMatchEnd, onGameReady }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<Game | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -106,6 +107,11 @@ export default function GameCanvas({ playerCount, roundsToWin = 3, dailyMode = f
       game.startDaily();
     } else {
       game.start();
+    }
+
+    // Notify parent that game is ready
+    if (onGameReady) {
+      onGameReady(game);
     }
 
     // Start game loop
