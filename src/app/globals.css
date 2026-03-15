@@ -3,36 +3,89 @@
 @tailwind utilities;
 
 :root {
-  --background: #1a1a2e;
+  --background: #0a0a0a;
   --foreground: #ffffff;
+  --mc-red: #dc2626;
+  --mc-border: #2a2a2a;
+  --mc-gray: #888888;
+  --mc-gray-dim: #555555;
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--background);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Mission Control Panel */
+.mc-panel {
+  position: relative;
+  background: #0d0d0d;
+  border: 1px solid var(--mc-border);
 }
 
-/* Responsive canvas scaling */
-canvas {
-  max-width: 100%;
-  height: auto;
-  touch-action: none;
+.mc-panel::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, var(--mc-red) 8px, transparent 8px) 0 0 / 9px 1px no-repeat,
+    linear-gradient(to bottom, var(--mc-red) 8px, transparent 8px) 0 0 / 1px 9px no-repeat,
+    linear-gradient(to left, var(--mc-red) 8px, transparent 8px) 100% 0 / 9px 1px no-repeat,
+    linear-gradient(to bottom, var(--mc-red) 8px, transparent 8px) 100% 0 / 1px 9px no-repeat,
+    linear-gradient(to right, var(--mc-red) 8px, transparent 8px) 0 100% / 9px 1px no-repeat,
+    linear-gradient(to top, var(--mc-red) 8px, transparent 8px) 0 100% / 1px 9px no-repeat,
+    linear-gradient(to left, var(--mc-red) 8px, transparent 8px) 100% 100% / 9px 1px no-repeat,
+    linear-gradient(to top, var(--mc-red) 8px, transparent 8px) 100% 100% / 1px 9px no-repeat;
 }
 
-/* Mobile-friendly layout */
+.mc-header {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mc-gray);
+}
+
+.mc-header-primary {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.mc-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mc-red);
+  box-shadow: 0 0 6px var(--mc-red);
+}
+
+.mc-divider {
+  height: 1px;
+  background: var(--mc-border);
+}
+
+.mc-link {
+  color: var(--mc-gray);
+  text-decoration: none;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.mc-link:hover {
+  color: var(--mc-red);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .flex-col {
-    gap: 0.5rem !important;
-  }
-  
-  .p-4 {
-    padding: 0.5rem !important;
+  canvas {
+    max-width: 100%;
+    height: auto !important;
   }
 }
