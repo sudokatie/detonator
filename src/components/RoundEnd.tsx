@@ -11,7 +11,7 @@ interface RoundEndProps {
 export default function RoundEnd({ winnerId, onNextRound }: RoundEndProps) {
   const [countdown, setCountdown] = useState(3);
   const isDraw = winnerId === null;
-  const winnerColor = winnerId !== null ? PLAYER_COLORS[winnerId] : '#888888';
+  const winnerColor = winnerId !== null ? PLAYER_COLORS[winnerId] : '#555555';
 
   useEffect(() => {
     if (countdown <= 0) {
@@ -32,27 +32,41 @@ export default function RoundEnd({ winnerId, onNextRound }: RoundEndProps) {
   }, [winnerId]);
 
   return (
-    <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-xl text-center">
-        <h2 className="text-4xl font-bold text-white mb-4">
-          {isDraw ? 'DRAW!' : 'ROUND OVER!'}
-        </h2>
+    <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center">
+      <div className="mc-panel p-6 min-w-[280px] text-center">
+        {/* Title Bar */}
+        <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b border-[#2a2a2a]">
+          <div className="mc-dot" />
+          <h2 className="mc-header-primary text-xl tracking-wider">
+            {isDraw ? 'DRAW' : 'ROUND COMPLETE'}
+          </h2>
+        </div>
         
         {!isDraw && (
           <div className="mb-6">
+            <span className="mc-header block mb-2">VICTOR</span>
             <div
-              className="inline-block px-6 py-3 rounded text-2xl font-bold"
-              style={{ backgroundColor: winnerColor }}
+              className="inline-block px-6 py-2 text-xl font-mono tracking-wider"
+              style={{ backgroundColor: winnerColor, color: '#0a0a0a' }}
             >
-              Player {winnerId! + 1} Wins!
+              PLAYER {winnerId! + 1}
             </div>
           </div>
         )}
 
-        <div className="text-6xl font-bold text-orange-500 mb-4">
-          {countdown}
+        <div className="mb-4">
+          <span className="mc-header block mb-2">NEXT ROUND IN</span>
+          <div className="text-5xl font-mono text-[#dc2626]">
+            {countdown}
+          </div>
         </div>
-        <p className="text-gray-400">Next round starting...</p>
+        
+        <div className="mc-progress mt-4">
+          <div 
+            className="mc-progress-fill transition-all duration-1000"
+            style={{ width: `${((3 - countdown) / 3) * 100}%` }}
+          />
+        </div>
       </div>
     </div>
   );

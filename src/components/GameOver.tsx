@@ -12,47 +12,52 @@ interface GameOverProps {
 }
 
 export default function GameOver({ winnerId, roundsToWin, onPlayAgain, onMainMenu, hasReplay, onShareReplay }: GameOverProps) {
-  const winnerColor = winnerId !== null ? PLAYER_COLORS[winnerId] : '#888888';
+  const winnerColor = winnerId !== null ? PLAYER_COLORS[winnerId] : '#555555';
 
   return (
     <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center">
-      <div className="bg-gray-800 p-10 rounded-lg shadow-xl text-center">
-        <h2 className="text-5xl font-bold text-orange-500 mb-6">GAME OVER</h2>
+      <div className="mc-panel p-6 min-w-[320px] text-center">
+        {/* Title Bar */}
+        <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b border-[#2a2a2a]">
+          <div className="mc-dot" />
+          <h2 className="mc-header-primary text-2xl tracking-wider">MISSION COMPLETE</h2>
+        </div>
         
         {winnerId !== null && (
-          <div className="mb-8">
+          <div className="mb-6">
+            <span className="mc-header block mb-3">MATCH WINNER</span>
             <div
-              className="inline-block px-8 py-4 rounded text-3xl font-bold mb-2"
-              style={{ backgroundColor: winnerColor }}
+              className="inline-block px-8 py-3 text-2xl font-mono tracking-wider mb-2"
+              style={{ backgroundColor: winnerColor, color: '#0a0a0a' }}
             >
-              Player {winnerId + 1}
+              PLAYER {winnerId + 1}
             </div>
-            <div className="text-2xl text-white">
-              Wins the Match! ({roundsToWin} rounds)
+            <div className="text-[#888888] text-sm tracking-wider mt-2">
+              {roundsToWin} ROUND{roundsToWin > 1 ? 'S' : ''} WON
             </div>
           </div>
         )}
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           <button
             onClick={onPlayAgain}
-            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white text-xl font-bold rounded transition-colors"
+            className="w-full py-3 bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm tracking-widest font-medium transition-colors border border-[#dc2626]"
           >
-            Play Again
+            REMATCH
           </button>
           {hasReplay && onShareReplay && (
             <button
               onClick={onShareReplay}
-              className="px-8 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded transition-colors"
+              className="w-full py-2 bg-transparent border border-[#2a2a2a] text-white text-sm tracking-widest font-medium transition-colors hover:border-[#dc2626]"
             >
-              Share Replay
+              SHARE REPLAY
             </button>
           )}
           <button
             onClick={onMainMenu}
-            className="px-8 py-3 bg-gray-600 hover:bg-gray-700 text-white text-xl font-bold rounded transition-colors"
+            className="w-full py-3 bg-transparent border border-[#2a2a2a] text-[#888888] text-sm tracking-widest font-medium transition-colors hover:text-white hover:border-[#3a3a3a]"
           >
-            Main Menu
+            RETURN TO BASE
           </button>
         </div>
       </div>
